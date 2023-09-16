@@ -6,6 +6,7 @@ import com.alura.foroinicial.Entities.DtoRespuestaTopico;
 import com.alura.foroinicial.Entities.Topico;
 import com.alura.foroinicial.Repository.TopicoRepository;
 import jakarta.validation.Valid;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,11 @@ public class TopicoController {
 
     @PostMapping
     public ResponseEntity<Topico> registroTopico(@RequestBody @Valid DtoRegistroTopico registro){
-        return ResponseEntity.ok(repository.save(new Topico(registro)));
+        try{
+            return ResponseEntity.ok(repository.save(new Topico(registro)));
+        }catch (DataIntegrityViolationException ex){
+            return ResponseEntity.badRequest().header("Error", "Error al registrar el topico").build();
+        }
     }
 
     @GetMapping
@@ -48,8 +53,13 @@ public class TopicoController {
         if(topico == null)
             return ResponseEntity.notFound().build();
 
-        topico.actualizar(registro);
-        return ResponseEntity.ok(repository.save(topico));
+        try{
+            topico.actualizar(registro);
+            return ResponseEntity.ok(repository.save(topico));
+        }
+        catch(DataIntegrityViolationException ex){
+            return ResponseEntity.badRequest().header("Error", "Error al actualizar el topico").build();
+        }
     }
 
     @DeleteMapping(path = "/{id}")
